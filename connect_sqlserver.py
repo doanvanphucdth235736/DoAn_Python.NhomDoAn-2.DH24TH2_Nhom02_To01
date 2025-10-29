@@ -18,8 +18,11 @@ try:
     insert_query = """
         INSERT INTO phongban (Maphongban, Tenphongban, Ngaynhanchuc)
         VALUES ('HC', N'Phòng Hành Chính', GETDATE());
+        INSERT INTO phongban (Maphongban, Tenphongban, Ngaynhanchuc)
         VALUES ('NS', N'Phòng Nhân Sự', GETDATE());
+        INSERT INTO phongban (Maphongban, Tenphongban, Ngaynhanchuc)
         VALUES ('KD', N'Phòng Kinh Doanh', GETDATE());
+        INSERT INTO phongban (Maphongban, Tenphongban, Ngaynhanchuc)
         VALUES ('MK', N'Phòng Marketing', GETDATE());
     """
     cursor.execute(insert_query)
