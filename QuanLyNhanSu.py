@@ -24,7 +24,7 @@ except Exception:
 frame_input = tk.LabelFrame(root, text="Thông tin nhân sự", padx=10, pady=10)
 frame_input.pack(fill="x", padx=10, pady=10)
 
-tk.Label(frame_input, text="Mã số:").grid(row=0, column=0)
+tk.Label(frame_input, text="Mã số nhân viên:").grid(row=0, column=0)
 txt_ma = tk.Entry(frame_input)
 txt_ma.grid(row=0, column=1)
 
