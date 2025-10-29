@@ -17,7 +17,10 @@ try:
     # 🧾 Thực hiện câu lệnh SQL ví dụ: thêm phòng ban mới
     insert_query = """
         INSERT INTO phongban (Maphongban, Tenphongban, Ngaynhanchuc)
-        VALUES ('PB05', N'Phòng Hành Chính', GETDATE());
+        VALUES ('HC', N'Phòng Hành Chính', GETDATE());
+        VALUES ('NS', N'Phòng Nhân Sự', GETDATE());
+        VALUES ('KD', N'Phòng Kinh Doanh', GETDATE());
+        VALUES ('MK', N'Phòng Marketing', GETDATE());
     """
     cursor.execute(insert_query)
     conn.commit()
