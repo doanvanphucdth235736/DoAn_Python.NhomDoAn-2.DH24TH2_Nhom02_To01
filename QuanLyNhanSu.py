@@ -2,6 +2,16 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 from datetime import datetime
+from tkcalendar import DateEntry
+import mysql.connector
+# ====== Kết nối MySQL ======
+def connect_db():
+    return mysql.connector.connect(
+    host="localhost",
+    user="root", # thay bằng user MySQL của bạn
+    password="1234", # thay bằng password MySQL của bạn
+    database="qlns"
+ )
 
 root = tk.Tk()
 root.title("Quản lý nhân sự")
@@ -24,7 +34,7 @@ except Exception:
 frame_input = tk.LabelFrame(root, text="Thông tin nhân sự", padx=10, pady=10)
 frame_input.pack(fill="x", padx=10, pady=10)
 
-tk.Label(frame_input, text="Mã số nhân viên:").grid(row=0, column=0)
+tk.Label(frame_input, text="Mã số:").grid(row=0, column=0)
 txt_ma = tk.Entry(frame_input)
 txt_ma.grid(row=0, column=1)
 
