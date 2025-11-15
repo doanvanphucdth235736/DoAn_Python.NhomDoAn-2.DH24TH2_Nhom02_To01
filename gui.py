@@ -4,11 +4,6 @@ from tkinter import ttk, messagebox
 from dialogs import DepartmentDialog, EmployeeDialog
 from database import connect_sql_server
 
-class recursive_update:
-    def __init__(self):
-        pass
-
-
 class HRDashboard(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -16,79 +11,109 @@ class HRDashboard(tk.Tk):
         self.title("Hệ thống quản lý nhân sự")
         self.geometry("1150x620")
         self.configure(bg="#f1f5f9")
+
         self.active_button = None
         self.dark_mode = False
+
         self.colors = {
             "light": {
                 "bg": "#f1f5f9",
                 "content": "#f8fafc",
-                "sidebar": "#19202d",
-                "text": "black"
+                "sidebar": "#1e293b",
+                "sidebar_button": "#1e293b",
+                "sidebar_hover": "#475569",
+                "sidebar_active": "#00567D",
+                "text": "black",
+                "entry_bg": "white",
+                "entry_fg": "black"
             },
             "dark": {
                 "bg": "#0f172a",
-                "content": "#ffffff",
+                "content": "#1e293b",
                 "sidebar": "#020617",
-                "text": "white"
+                "sidebar_button": "#020617",
+                "sidebar_hover": "#334155",
+                "sidebar_active": "#0ea5e9",
+                "text": "white",
+                "entry_bg": "#334155",
+                "entry_fg": "white"
             }
         }
-        self.sidebar_buttons = []
-        self.sidebar_default_bg = "#1e293b"
-        self.sidebar_hover_bg = "#475569"
-        self.sidebar_active_bg = "#00567D"
 
+        # Database
         self.conn, self.cursor = connect_sql_server()
         if not self.conn:
             self.destroy()
             return
 
-        self.sidebar = tk.Frame(self, bg="#1e293b", width=200)
+        # -------- FIX PACK/GRID --------
+        # Sidebar (pack)
+        self.sidebar = tk.Frame(self, bg=self.colors["light"]["sidebar"], width=200)
         self.sidebar.pack(side="left", fill="y")
 
-        self.content = tk.Frame(self, bg="#f8fafc")
-        self.content.pack(side="right", expand=True, fill="both")
+        # Nội dung (pack)
+        self.content = tk.Frame(self, bg=self.colors["light"]["content"])
+        self.content.pack(side="right", fill="both", expand=True)
 
+        # Build UI
         self.build_sidebar()
         self.show_employee_page()
 
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 
     # ========== SIDEBAR ==========
+
     def set_active_button(self, btn):
+        mode = "dark" if self.dark_mode else "light"
+
         if self.active_button:
-            self.active_button.configure(bg=self.sidebar_default_bg)
-        btn.configure(bg=self.sidebar_active_bg)
+            self.active_button.configure(bg=self.colors[mode]["sidebar_button"])
+
+        btn.configure(bg=self.colors[mode]["sidebar_active"])
         self.active_button = btn
 
     def on_enter(self, btn):
+        mode = "dark" if self.dark_mode else "light"
         if btn != self.active_button:
-            btn.configure(bg=self.sidebar_hover_bg)
+            btn.configure(bg=self.colors[mode]["sidebar_hover"])
 
     def on_leave(self, btn):
+        mode = "dark" if self.dark_mode else "light"
         if btn != self.active_button:
-            btn.configure(bg=self.sidebar_default_bg)
+            btn.configure(bg=self.colors[mode]["sidebar_button"])
 
     def build_sidebar(self):
-        tk.Label(self.sidebar, text="HR SYSTEM", fg="white", bg="#1e293b",
-             font=("Arial", 16, "bold"), pady=20).pack()
+        mode = "dark" if self.dark_mode else "light"
 
-        btn_style = {
-            "bg": self.sidebar_default_bg,
-            "fg": "white",
-            "font": ("Arial", 12),
-            "bd": 0,
-            "activebackground": self.sidebar_active_bg,
-            "anchor": "w",
-            "padx": 20,
-            "pady": 10
-        }
+        title = tk.Label(
+            self.sidebar,
+            text="📊 HR SYSTEM",
+            bg=self.colors[mode]["sidebar"],
+            fg="white",
+            font=("Arial", 17, "bold"),
+            pady=20
+        )
+        title.pack()
+
+        self.sidebar_buttons = []
 
         def create_btn(text, command):
-            btn = tk.Button(self.sidebar, text=text, **btn_style,
-                            command=lambda: command(btn))
+            mode = "dark" if self.dark_mode else "light"
+            btn = tk.Button(
+                self.sidebar,
+                text=text,
+                bg=self.colors[mode]["sidebar_button"],
+                fg="white",
+                bd=0,
+                anchor="w",
+                padx=20,
+                pady=10,
+                font=("Arial", 13, "bold"),
+                activebackground=self.colors[mode]["sidebar_active"],
+                command=lambda: command(btn)
+            )
             btn.pack(fill="x")
 
-            # Hover effect
             btn.bind("<Enter>", lambda e, b=btn: self.on_enter(b))
             btn.bind("<Leave>", lambda e, b=btn: self.on_leave(b))
 
@@ -100,25 +125,38 @@ class HRDashboard(tk.Tk):
         self.btn_salary = create_btn("💰 Quản lý lương", self.show_salary_page)
 
         def create_bottom_btn(text, command):
-            btn = tk.Button(self.sidebar, text=text, **btn_style,
-                            command=lambda: command(btn))
-            btn.pack(side="bottom", fill="x", pady=10)  
-            self.sidebar_buttons.append(btn)
-            # Hover effect
+            mode = "dark" if self.dark_mode else "light"
+            btn = tk.Button(
+                self.sidebar,
+                text=text,
+                bg=self.colors[mode]["sidebar_button"],
+                fg="white",
+                bd=0,
+                anchor="w",
+                padx=20,
+                pady=10,
+                activebackground=self.colors[mode]["sidebar_active"],
+                command=lambda: command(btn)
+            )
+            btn.pack(side="bottom", fill="x", pady=10)
+
             btn.bind("<Enter>", lambda e, b=btn: self.on_enter(b))
             btn.bind("<Leave>", lambda e, b=btn: self.on_leave(b))
+
+            self.sidebar_buttons.append(btn)
             return btn
 
         self.btn_dark_mode = create_bottom_btn("🌙    Dark Mode", self.toggle_dark_mode)
 
-
     # ========== COMMON ==========
+
     def clear_content(self):
         for w in self.content.winfo_children():
             w.destroy()
 
     def create_table(self, parent, columns):
-        frame = tk.Frame(parent, bg=self.colors["dark"]["content"] if self.dark_mode else self.colors["light"]["content"])
+        mode = "dark" if self.dark_mode else "light"
+        frame = tk.Frame(parent, bg=self.colors[mode]["content"])
         frame.pack(fill="both", expand=True)
 
         table = ttk.Treeview(frame, columns=columns, show="headings", height=14)
@@ -135,46 +173,70 @@ class HRDashboard(tk.Tk):
         return table
 
     # ========== NHÂN VIÊN ==========
+
     def show_employee_page(self, btn=None):
         if btn:
             self.set_active_button(btn)
 
         self.clear_content()
 
-        tk.Label(self.content, text="Quản lý nhân viên",
-            bg=self.colors["dark"]["content"] if self.dark_mode else self.colors["light"]["content"],
-            fg=self.colors["dark"]["text"] if self.dark_mode else self.colors["light"]["text"],
-                font=("Arial", 18, "bold")).pack(anchor="w", padx=20, pady=10)
+        mode = "dark" if self.dark_mode else "light"
 
-        frame = tk.Frame(self.content, bg=self.colors["dark"]["content"] if self.dark_mode else self.colors["light"]["content"])
-        search_frame = tk.Frame(frame, bg=self.colors["dark"]["content"] if self.dark_mode else self.colors["light"]["content"])
+        tk.Label(
+            self.content,
+            text="Quản lý nhân viên",
+            bg=self.colors[mode]["content"],
+            fg=self.colors[mode]["text"],
+            font=("Arial", 18, "bold")
+        ).pack(anchor="w", padx=20, pady=10)
 
-        search_frame.pack(fill="x", pady=5)
-
-        tk.Label(search_frame, text="🔍 Tìm kiếm:", font=("Arial", 12),
-            bg=self.colors["dark"]["content"] if self.dark_mode else self.colors["light"]["content"],
-            fg=self.colors["dark"]["text"] if self.dark_mode else self.colors["light"]["text"])
-
-        self.search_var = tk.StringVar()
-        tk.Entry(search_frame, textvariable=self.search_var,
-                width=35, font=("Arial", 12)).pack(side="left", padx=5)
-
-        tk.Button(search_frame, text="Tìm", bg="#16a34a", fg="white",
-                font=("Arial", 11, "bold"),
-                command=self.search_employee).pack(side="left", padx=5)
-
-        tk.Button(search_frame, text="Reset", bg="#dc2626", fg="white",
-                font=("Arial", 11, "bold"),
-                command=self.load_employees).pack(side="left", padx=5)
-
+        frame = tk.Frame(self.content, bg=self.colors[mode]["content"])
         frame.pack(fill="both", expand=True, padx=20)
 
-        tk.Button(frame, text="➕ Thêm nhân viên", bg="#0ea5e9",
-                fg="white", font=("Arial", 11, "bold"),
-                command=self.add_employee).pack(anchor="e", pady=5)
+        search_frame = tk.Frame(frame, bg=self.colors[mode]["content"])
+        search_frame.pack(fill="x", pady=5)
+
+        tk.Label(
+            search_frame, text="🔍 Tìm kiếm:",
+            bg=self.colors[mode]["content"],
+            fg=self.colors[mode]["text"],
+            font=("Arial", 12)
+        ).pack(side="left")
+
+        self.search_var = tk.StringVar()
+        tk.Entry(
+            search_frame,
+            textvariable=self.search_var,
+            width=35,
+            font=("Arial", 12),
+            bg=self.colors[mode]["entry_bg"],
+            fg=self.colors[mode]["entry_fg"],
+            insertbackground=self.colors[mode]["entry_fg"]
+        ).pack(side="left", padx=5)
+
+        tk.Button(
+            search_frame, text="Tìm",
+            bg="#16a34a", fg="white",
+            font=("Arial", 11, "bold"),
+            command=self.search_employee
+        ).pack(side="left", padx=5)
+
+        tk.Button(
+            search_frame, text="Reset",
+            bg="#dc2626", fg="white",
+            font=("Arial", 11, "bold"),
+            command=self.load_employees
+        ).pack(side="left", padx=5)
+
+        tk.Button(
+            frame, text="➕ Thêm nhân viên",
+            bg="#0ea5e9", fg="white",
+            font=("Arial", 11, "bold"),
+            command=self.add_employee
+        ).pack(anchor="e", pady=5)
 
         columns = ("Mã NV", "Họ và Tên", "Giới tính", "Ngày sinh", "SĐT",
-                "Địa chỉ", "Chức vụ", "Phòng ban")
+                   "Địa chỉ", "Chức vụ", "Phòng ban")
         self.emp_table = self.create_table(frame, columns)
         self.load_employees()
 
@@ -260,18 +322,28 @@ class HRDashboard(tk.Tk):
             self.set_active_button(btn)
         self.clear_content()
 
+        mode = "dark" if self.dark_mode else "light"
+
         tk.Label(self.content, text="Quản lý phòng ban",
-         bg=self.colors["dark"]["content"] if self.dark_mode else self.colors["light"]["content"],
-         fg=self.colors["dark"]["text"] if self.dark_mode else self.colors["light"]["text"],
-         font=("Arial", 18, "bold")).pack(anchor="w", padx=20, pady=10)
+             bg=self.colors[mode]["content"],
+             fg=self.colors[mode]["text"],
+             font=("Arial", 18, "bold")).pack(anchor="w", padx=20, pady=10)
+
+        # Add button: Thêm phòng ban
+        top_frame = tk.Frame(self.content, bg=self.colors[mode]["content"])
+        top_frame.pack(fill="x", padx=20)
+        tk.Button(top_frame, text="➕ Thêm phòng ban", bg="#0ea5e9", fg="white",
+                  font=("Arial", 11, "bold"),
+                  command=lambda: DepartmentDialog(self, self.cursor, self.conn, self.show_department_page).open()
+                 ).pack(anchor="e", pady=5)
 
         columns = ("Mã PB", "Tên phòng", "Số NV", "Chi tiết")
         table = self.create_table(self.content, columns)
 
         self.cursor.execute("SELECT dept_id, dept_name FROM departments")
-
         for dept_id, name in self.cursor.fetchall():
-            self.cursor.execute("SELECT COUNT(*) FROM employees WHERE dept_id=?", dept_id)
+            # correct parameter passing as tuple
+            self.cursor.execute("SELECT COUNT(*) FROM employees WHERE dept_id=?", (dept_id,))
             count = self.cursor.fetchone()[0]
             table.insert("", "end", values=(dept_id, name, count, "Xem ➜"))
 
@@ -303,23 +375,39 @@ class HRDashboard(tk.Tk):
 
         table.bind("<Button-3>", click_right)
 
+
     def delete_department(self, dept_id):
         if not messagebox.askyesno("Xóa", f"Xóa phòng ban {dept_id}?"):
             return
-        
-        self.cursor.execute("DELETE FROM departments WHERE dept_id=?", dept_id)
-        self.conn.commit()
-        self.show_department_page(self.btn_dept)
+
+        # Trước khi xóa, set dept_id của nhân viên về NULL để tránh ràng buộc FK (nếu có)
+        try:
+            self.cursor.execute("UPDATE employees SET dept_id=NULL WHERE dept_id=?", (dept_id,))
+            self.cursor.execute("DELETE FROM departments WHERE dept_id=?", (dept_id,))
+            self.conn.commit()
+            self.show_department_page(self.btn_dept)
+        except Exception as e:
+            messagebox.showerror("Lỗi", str(e))
 
 
     def show_employees_by_dept(self, dept_id):
         self.clear_content()
-        tk.Label(self.content, text=f"Nhân viên phòng {dept_id}",
-                 bg="#f8fafc", font=("Arial", 18, "bold")).pack(anchor="w", padx=20, pady=10)
+
+        # Lấy tên phòng ban
+        self.cursor.execute("SELECT dept_name FROM departments WHERE dept_id=?", (dept_id,))
+        dept_name = self.cursor.fetchone()[0]
+
+        tk.Label(
+            self.content,
+            text=f"Nhân viên thuộc phòng: {dept_name} ({dept_id})",
+            bg="#f8fafc",
+            font=("Arial", 18, "bold")
+        ).pack(anchor="w", padx=20, pady=10)
 
         columns = ("Mã NV", "Họ và tên", "Chức vụ")
         table = self.create_table(self.content, columns)
 
+        # Lấy nhân viên thuộc phòng ban
         self.cursor.execute("""
             SELECT e.id, e.name, p.position_name
             FROM employees e
@@ -331,6 +419,15 @@ class HRDashboard(tk.Tk):
         for row in self.cursor.fetchall():
             row = tuple(str(x) if x is not None else "" for x in row)
             table.insert("", "end", values=row)
+
+        tk.Button(
+            self.content,
+            text="⬅ Quay lại",
+            bg="#0ea5e9",
+            fg="white",
+            font=("Arial", 12, "bold"),
+            command=lambda: self.show_department_page(self.btn_dept)
+        ).pack(anchor="w", padx=20, pady=10)
 
 
     # ========== LƯƠNG ==========
@@ -379,108 +476,87 @@ class HRDashboard(tk.Tk):
         self.dark_mode = not self.dark_mode
         mode = "dark" if self.dark_mode else "light"
 
-        # Nút Dark Mode
+        # Update dark mode button text
         self.btn_dark_mode.configure(
-            text="🌙     Dark Mode" if not self.dark_mode else "☀️ Light Mode"
+            text="☀️ Light Mode" if self.dark_mode else "🌙    Dark Mode"
         )
 
-        # Cập nhật màu nền tổng thể
+        # Update backgrounds
         self.configure(bg=self.colors[mode]["bg"])
         self.sidebar.configure(bg=self.colors[mode]["sidebar"])
         self.content.configure(bg=self.colors[mode]["content"])
 
-        # Label trong sidebar
+        # Sidebar label
         for w in self.sidebar.winfo_children():
             if isinstance(w, tk.Label):
-                w.configure(
-                    bg=self.colors[mode]["sidebar"],
-                    fg="white"
-                )
+                w.configure(bg=self.colors[mode]["sidebar"], fg="white")
 
         # Sidebar buttons
         for b in self.sidebar_buttons:
-            b.configure(bg=self.sidebar_default_bg, fg="white")
+            b.configure(
+                bg=self.colors[mode]["sidebar_button"],
+                fg="white",
+                activebackground=self.colors[mode]["sidebar_active"],
+                activeforeground="white"
+            )
 
+        # Active button giữ màu active
         if self.active_button:
-            self.active_button.configure(bg=self.sidebar_active_bg)
+            self.active_button.configure(bg=self.colors[mode]["sidebar_active"])
 
-        # ==============================
-        #   HÀM CẬP NHẬT TOÀN BỘ WIDGET
-        # ==============================
+        # Recursive update content
         def recursive_update(widget):
             for w in widget.winfo_children():
-
-                # Label
-                if isinstance(w, tk.Label):
-                    w.configure(
-                        bg=self.colors[mode]["content"],
-                        fg=self.colors[mode]["text"]
-                    )
-
-                # Frame
-                elif isinstance(w, tk.Frame):
+                if isinstance(w, tk.Frame):
                     w.configure(bg=self.colors[mode]["content"])
 
-                # Entry
+                elif isinstance(w, tk.Label):
+                    w.configure(bg=self.colors[mode]["content"], fg=self.colors[mode]["text"])
+
                 elif isinstance(w, tk.Entry):
                     w.configure(
-                        bg="#334155" if mode == "dark" else "white",
-                        fg="white" if mode == "dark" else "black",
-                        insertbackground="white" if mode == "dark" else "black"
+                        bg=self.colors[mode]["entry_bg"],
+                        fg=self.colors[mode]["entry_fg"],
+                        insertbackground=self.colors[mode]["entry_fg"]
                     )
 
-                # Button
                 elif isinstance(w, tk.Button):
-                    # Chỉ đổi màu các button không phải action button
-                    if w["bg"] not in ["#0ea5e9", "#16a34a", "#dc2626"]:
-                        w.configure(
-                            bg="#475569" if mode == "dark" else "#e2e8f0",
-                            fg="white" if mode == "dark" else "black"
-                        )
+                    if w not in self.sidebar_buttons:
+                        special = ["#0ea5e9", "#16a34a", "#dc2626"]
+                        if w.cget("bg") in special:
+                            w.configure(fg="white")
+                        else:
+                            w.configure(
+                                bg=self.colors[mode]["content"],
+                                fg=self.colors[mode]["text"],
+                                activebackground=self.colors[mode]["sidebar_hover"]
+                            )
 
                 recursive_update(w)
 
         recursive_update(self.content)
 
-        # ==============================
-        #   TREEVIEW STYLE
-        # ==============================
+        # Treeview style
         style = ttk.Style()
         style.theme_use("default")
 
         if mode == "dark":
-            style.configure(
-                "Treeview",
-                background="#1e293b",
-                fieldbackground="#1e293b",
-                foreground="white",
-                rowheight=25,
-                borderwidth=0
-            )
-            style.configure(
-                "Treeview.Heading",
-                background="#334155",
-                foreground="white",
-                font=("Arial", 11, "bold")
-            )
-            style.map(
-                "Treeview",
-                background=[("selected", "#2563eb")],
-                foreground=[("selected", "white")]
-            )
+            style.configure("Treeview",
+                            background="#1e293b",
+                            fieldbackground="#1e293b",
+                            foreground="white")
+            style.configure("Treeview.Heading",
+                            background="#334155",
+                            foreground="white")
         else:
-            style.configure(
-                "Treeview",
-                background="white",
-                fieldbackground="white",
-                foreground="black"
-            )
-            style.configure(
-                "Treeview.Heading",
-                background="#e2e8f0",
-                foreground="black",
-                font=("Arial", 11, "bold")
-            )
+            style.configure("Treeview",
+                            background="white",
+                            fieldbackground="white",
+                            foreground="black")
+            style.configure("Treeview.Heading",
+                            background="#e2e8f0",
+                            foreground="black")
+
 
     # ========== CLOSE ==========
     def on_close(self):
