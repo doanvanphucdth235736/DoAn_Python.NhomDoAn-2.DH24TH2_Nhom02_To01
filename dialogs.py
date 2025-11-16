@@ -91,8 +91,8 @@ class EmployeeDialog:
                 if self.cursor.fetchone() is not None:
                     return messagebox.showerror("Lỗi", "Mã nhân viên đã tồn tại!")
 
-            if not data["SĐT"].isdigit():
-                return messagebox.showerror("Lỗi", "Số điện thoại phải là số")
+            if not data["SĐT"].isdigit() or len(data["SĐT"]) != 10:
+                return messagebox.showerror("Lỗi", "Số điện thoại phải là số và đủ 10 chữ số!")
             
             import datetime
             try:
@@ -290,7 +290,7 @@ class SalaryDialog:
         rating = self.rating_combo.get()
 
         if not days.isdigit():
-            return messagebox.showerror("Lỗi", "Ngày công phải là số!")
+            return messagebox.showerror("Lỗi", "Ngày công phải là số >= 0!")
 
         self.cursor.execute("""
             UPDATE salaries
