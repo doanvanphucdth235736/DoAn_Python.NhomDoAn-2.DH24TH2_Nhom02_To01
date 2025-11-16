@@ -1,8 +1,10 @@
 # dialogs.py
+
+# =================== IMPORT MODULES ===================
 import tkinter as tk
 from tkinter import ttk, messagebox
 
-
+# =================== DIALOG NHÂN VIÊN ===================
 class EmployeeDialog:
     def __init__(self, parent, cursor, conn, refresh_callback, emp_data=None):
         self.parent = parent
@@ -12,7 +14,7 @@ class EmployeeDialog:
         self.emp_data = emp_data
         self.original_id = emp_data[0] if emp_data else None
 
-    # =================== OPEN DIALOG ===================
+    # ----------------- MỞ DIALOG NHÂN VIÊN ----------------
     def open(self):
         self.win = tk.Toplevel(self.parent)
         self.win.title("Sửa nhân viên" if self.emp_data else "Thêm nhân viên")
@@ -56,7 +58,7 @@ class EmployeeDialog:
                 entry.grid(row=i, column=1)
                 self.entries[label] = entry
 
-        # Fill old values for edit
+        # Nếu sửa → điền dữ liệu cũ
         if self.emp_data:
             for lbl, value in zip(labels, self.emp_data):
                 if isinstance(self.entries[lbl], ttk.Combobox):
@@ -64,10 +66,20 @@ class EmployeeDialog:
                 else:
                     self.entries[lbl].insert(0, value)
 
-        tk.Button(self.win, text="Lưu", bg="#0284c7", fg="white",
-                  command=self.save).grid(row=len(labels), columnspan=2, pady=20)
+        tk.Button(
+            self.win,
+            text="💾  Lưu",
+            bg="#0284c7",
+            fg="white",
+            font=("Arial", 13, "bold"),  
+            width=12,                   
+            height=1,                    
+            cursor="hand2",
+            command=self.save
+        ).grid(row=len(labels), columnspan=2, pady=15)
+        
 
-    # ================= SAVE DATA =================
+    # ------------------ LƯU DỮ LIỆU NHÂN VIÊN ----------------
     def save(self):
         try:
             data = {lbl: self.entries[lbl].get().strip() for lbl in self.entries}
@@ -124,7 +136,7 @@ class EmployeeDialog:
         except Exception as e:
             messagebox.showerror("Lỗi", str(e))
 
-
+# =================== DIALOG PHÒNG BAN ===================
 class DepartmentDialog:
     def __init__(self, parent, cursor, conn, refresh_callback, dept_data=None):
         self.parent = parent
@@ -150,12 +162,12 @@ class DepartmentDialog:
         # Nút lưu
         tk.Button(
             self.win,
-            text="💾 LƯU",
+            text="💾 Lưu",
             font=("Arial", 13, "bold"),
             bg="#0ea5e9",
             fg="white",
             width=12,
-            height=2,
+            height=1,
             command=self.save
         ).pack(pady=15)
 
@@ -167,7 +179,7 @@ class DepartmentDialog:
         else:
             self.original_id = None
 
-    # ================== SAVE ==================
+    # ------------------ LƯU DỮ LIỆU PHÒNG BAN ----------------
     def save(self):
         dept_id = self.var_id.get().strip()
         dept_name = self.var_name.get().strip()
@@ -215,41 +227,80 @@ class DepartmentDialog:
         except Exception as e:
             messagebox.showerror("Lỗi", str(e))
 
+    # ----------------- MỞ DIALOG PHÒNG BAN ----------------
     def open(self):
         self.win.mainloop()
 
-
+# =================== DIALOG LƯƠNG NHÂN VIÊN ===================
 class SalaryDialog:
     def __init__(self, parent, cursor, conn, reload, data):
+        # data = (emp_id, name, working_days, salary, rating)
         self.parent = parent
         self.cursor = cursor
         self.conn = conn
         self.reload = reload
         self.data = data
 
+    # ----------------- MỞ DIALOG LƯƠNG NHÂN VIÊN ----------------
     def open(self):
         win = tk.Toplevel(self.parent)
         win.title("Sửa lương")
-        win.geometry("350x200")
+        win.geometry("380x280")
+        win.resizable(False, False)
+        self.win = win
 
-        tk.Label(win, text="Số ngày công:").pack()
-        self.days = tk.Entry(win)
+        # SỐ NGÀY CÔNG
+        tk.Label(win, text="Số ngày công:", font=("Arial", 12)).pack(pady=5)
+        self.days = tk.Entry(win, font=("Arial", 12))
         self.days.pack()
         self.days.insert(0, self.data[2])
 
-        tk.Label(win, text="Lương:").pack()
-        self.sal = tk.Entry(win)
-        self.sal.pack()
-        self.sal.insert(0, self.data[3])
+        # ĐÁNH GIÁ (rating)
+        tk.Label(win, text="Đánh giá:", font=("Arial", 12)).pack(pady=5)
 
-        tk.Button(win, text="Lưu", command=self.save).pack(pady=10)
+        self.rating_combo = ttk.Combobox(
+            win,
+            state="readonly",
+            width=25,
+            font=("Arial", 11)
+        )
+        self.rating_combo["values"] = ("Xuất sắc", "Tốt", "Trung bình", "Kém")
+        self.rating_combo.pack()
 
+        # set rating cũ
+        if self.data[4]:
+            self.rating_combo.set(self.data[4])
+        else:
+            self.rating_combo.set("Tốt")
+
+        tk.Button(
+            win,
+            text="💾 Lưu",
+            bg="#0ea5e9",
+            fg="white",
+            font=("Arial", 12, "bold"),
+            width=12,
+            height=1,
+            command=self.save
+        ).pack(pady=15)
+    
+    # ------------------ LƯU DỮ LIỆU LƯƠNG NHÂN VIÊN ----------------
     def save(self):
+        days = self.days.get().strip()
+        rating = self.rating_combo.get()
+
+        if not days.isdigit():
+            return messagebox.showerror("Lỗi", "Ngày công phải là số!")
+
         self.cursor.execute("""
-            UPDATE salaries SET working_days=?, official_salary=? 
+            UPDATE salaries
+            SET working_days=?, rating=?
             WHERE emp_id=?
-        """, (self.days.get(), self.sal.get(), self.data[0]))
+        """, (days, rating, self.data[0]))
 
         self.conn.commit()
         self.reload()
+        self.win.destroy()
+        messagebox.showinfo("Thành công", "Cập nhật lương thành công!")
+
 

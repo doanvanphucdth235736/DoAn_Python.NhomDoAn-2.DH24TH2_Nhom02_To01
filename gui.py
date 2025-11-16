@@ -1,20 +1,27 @@
 # gui.py
+
+# 📌 PHẦN 1 — IMPORT MODULES
+
 import tkinter as tk
 from tkinter import ttk, messagebox
-from dialogs import DepartmentDialog, EmployeeDialog
+from dialogs import DepartmentDialog, EmployeeDialog, SalaryDialog
 from database import connect_sql_server
 
+# 📌 PHẦN 2 — CLASS HRDashboard (CỬA SỔ CHÍNH)
 class HRDashboard(tk.Tk):
     def __init__(self):
         super().__init__()
 
+        # 🖼️ CẤU HÌNH CỬA SỔ CHÍNH
         self.title("Hệ thống quản lý nhân sự")
         self.geometry("1150x620")
         self.configure(bg="#f1f5f9")
 
+        # Lưu trạng thái nút sidebar & dark mode
         self.active_button = None
         self.dark_mode = False
 
+        # 🎨 BẢNG MÀU GIAO DIỆN: LIGHT & DARK
         self.colors = {
             "light": {
                 "bg": "#f1f5f9",
@@ -40,13 +47,13 @@ class HRDashboard(tk.Tk):
             }
         }
 
-        # Database
+        # 🗄️ KẾT NỐI DATABASE SQL SERVER
         self.conn, self.cursor = connect_sql_server()
         if not self.conn:
             self.destroy()
             return
 
-        # -------- FIX PACK/GRID --------
+        # 🏗️ LAYOUT CHÍNH
         # Sidebar (pack)
         self.sidebar = tk.Frame(self, bg=self.colors["light"]["sidebar"], width=200)
         self.sidebar.pack(side="left", fill="y")
@@ -55,14 +62,16 @@ class HRDashboard(tk.Tk):
         self.content = tk.Frame(self, bg=self.colors["light"]["content"])
         self.content.pack(side="right", fill="both", expand=True)
 
-        # Build UI
+        # 🧩 KHỞI TẠO CÁC THÀNH PHẦN
         self.build_sidebar()
         self.show_employee_page()
 
+        # Đóng chương trình
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 
-    # ========== SIDEBAR ==========
+    # 📌 PHẦN 3 — SIDE BAR (MENU TRÁI)
 
+    # -------------------------- ACTIVE BUTTON -------------------------
     def set_active_button(self, btn):
         mode = "dark" if self.dark_mode else "light"
 
@@ -72,16 +81,19 @@ class HRDashboard(tk.Tk):
         btn.configure(bg=self.colors[mode]["sidebar_active"])
         self.active_button = btn
 
+    # ---------------------- HIỆU ỨNG HOVER -----------------------
     def on_enter(self, btn):
         mode = "dark" if self.dark_mode else "light"
         if btn != self.active_button:
             btn.configure(bg=self.colors[mode]["sidebar_hover"])
 
+    # ---------------------- HIỆU ỨNG RỜI -----------------------
     def on_leave(self, btn):
         mode = "dark" if self.dark_mode else "light"
         if btn != self.active_button:
             btn.configure(bg=self.colors[mode]["sidebar_button"])
 
+    # -------------------------- TẠO SIDEBAR -----------------------------
     def build_sidebar(self):
         mode = "dark" if self.dark_mode else "light"
 
@@ -148,12 +160,14 @@ class HRDashboard(tk.Tk):
 
         self.btn_dark_mode = create_bottom_btn("🌙    Dark Mode", self.toggle_dark_mode)
 
-    # ========== COMMON ==========
+    # 📌 PHẦN 4 — HÀM CHUNG
 
+    # -------------------------- XÓA CONTENT ---------------------------
     def clear_content(self):
         for w in self.content.winfo_children():
             w.destroy()
 
+    # -------------------------- TẠO BẢNG TREEVIEW --------------------
     def create_table(self, parent, columns):
         mode = "dark" if self.dark_mode else "light"
         frame = tk.Frame(parent, bg=self.colors[mode]["content"])
@@ -172,8 +186,9 @@ class HRDashboard(tk.Tk):
 
         return table
 
-    # ========== NHÂN VIÊN ==========
+    # 📌 PHẦN 5 — QUẢN LÝ NHÂN VIÊN
 
+    # --------------------------- HIỂN THỊ TRANG ------------------------
     def show_employee_page(self, btn=None):
         if btn:
             self.set_active_button(btn)
@@ -242,6 +257,7 @@ class HRDashboard(tk.Tk):
 
         self.emp_table.bind("<Button-3>", self.right_click_employee)
 
+    # --------------------------- TẢI DỮ LIỆU NHÂN VIÊN ------------------------
     def load_employees(self):
         self.emp_table.delete(*self.emp_table.get_children())
 
@@ -258,6 +274,7 @@ class HRDashboard(tk.Tk):
             row = tuple(str(x) if x is not None else "" for x in row)
             self.emp_table.insert("", "end", values=row)
 
+    # --------------------------- TÌM KIẾM NHÂN VIÊN ------------------------
     def search_employee(self):
         keyword = self.search_var.get().strip()
         if not keyword:
@@ -286,7 +303,7 @@ class HRDashboard(tk.Tk):
             row = tuple(str(x) if x is not None else "" for x in row)
             self.emp_table.insert("", "end", values=row)
 
-
+    # ------------------------- CLICK CHUỘT PHẢI NHÂN VIÊN ----------------------
     def right_click_employee(self, event):
         sel = self.emp_table.focus()
         if not sel:
@@ -297,14 +314,17 @@ class HRDashboard(tk.Tk):
         menu.add_command(label="Xóa", command=lambda: self.delete_employee(sel))
         menu.post(event.x_root, event.y_root)
 
+    # ------------------------- THÊM NHÂN VIÊN ----------------------
     def add_employee(self):
         EmployeeDialog(self, self.cursor, self.conn, self.load_employees).open()
 
+    # ------------------------- SỬA NHÂN VIÊN ----------------------
     def edit_employee(self, item):
         data = self.emp_table.item(item, "values")
         EmployeeDialog(self, self.cursor, self.conn, self.load_employees,
                        emp_data=data).open()
 
+    # ------------------------- XÓA NHÂN VIÊN ----------------------
     def delete_employee(self, item):
         emp_id = self.emp_table.item(item, "values")[0]
 
@@ -316,7 +336,9 @@ class HRDashboard(tk.Tk):
         self.conn.commit()
         self.load_employees()
 
-    # ========== PHÒNG BAN ==========
+    # 📌 PHẦN 6 — QUẢN LÝ PHÒNG BAN
+
+    # --------------------------- HIỂN THỊ TRANG ------------------------
     def show_department_page(self, btn=None):
         if btn:
             self.set_active_button(btn)
@@ -329,7 +351,6 @@ class HRDashboard(tk.Tk):
              fg=self.colors[mode]["text"],
              font=("Arial", 18, "bold")).pack(anchor="w", padx=20, pady=10)
 
-        # Add button: Thêm phòng ban
         top_frame = tk.Frame(self.content, bg=self.colors[mode]["content"])
         top_frame.pack(fill="x", padx=20)
         tk.Button(top_frame, text="➕ Thêm phòng ban", bg="#0ea5e9", fg="white",
@@ -375,12 +396,10 @@ class HRDashboard(tk.Tk):
 
         table.bind("<Button-3>", click_right)
 
-
+    # ------------------------- XÓA PHÒNG BAN ----------------------
     def delete_department(self, dept_id):
         if not messagebox.askyesno("Xóa", f"Xóa phòng ban {dept_id}?"):
             return
-
-        # Trước khi xóa, set dept_id của nhân viên về NULL để tránh ràng buộc FK (nếu có)
         try:
             self.cursor.execute("UPDATE employees SET dept_id=NULL WHERE dept_id=?", (dept_id,))
             self.cursor.execute("DELETE FROM departments WHERE dept_id=?", (dept_id,))
@@ -389,11 +408,10 @@ class HRDashboard(tk.Tk):
         except Exception as e:
             messagebox.showerror("Lỗi", str(e))
 
-
+    # ------------------------- HIỂN THỊ NHÂN VIÊN THEO PHÒNG BAN ----------------------
     def show_employees_by_dept(self, dept_id):
         self.clear_content()
 
-        # Lấy tên phòng ban
         self.cursor.execute("SELECT dept_name FROM departments WHERE dept_id=?", (dept_id,))
         dept_name = self.cursor.fetchone()[0]
 
@@ -407,7 +425,6 @@ class HRDashboard(tk.Tk):
         columns = ("Mã NV", "Họ và tên", "Chức vụ")
         table = self.create_table(self.content, columns)
 
-        # Lấy nhân viên thuộc phòng ban
         self.cursor.execute("""
             SELECT e.id, e.name, p.position_name
             FROM employees e
@@ -430,68 +447,89 @@ class HRDashboard(tk.Tk):
         ).pack(anchor="w", padx=20, pady=10)
 
 
-    # ========== LƯƠNG ==========
+    # 📌 PHẦN 7 — QUẢN LÝ LƯƠNG
+
+    # --------------------------- HIỂN THỊ TRANG ------------------------
     def show_salary_page(self, btn=None):
         if btn:
             self.set_active_button(btn)
         self.clear_content()
 
-        tk.Label(self.content, text="Quản lý lương",
-         bg=self.colors["dark"]["content"] if self.dark_mode else self.colors["light"]["content"],
-         fg=self.colors["dark"]["text"] if self.dark_mode else self.colors["light"]["text"],
-         font=("Arial", 18, "bold")).pack(anchor="w", padx=20, pady=10)
+        tk.Label(
+            self.content,
+            text="Quản lý lương",
+            bg=self.colors["dark"]["content"] if self.dark_mode else self.colors["light"]["content"],
+            fg=self.colors["dark"]["text"] if self.dark_mode else self.colors["light"]["text"],
+            font=("Arial", 18, "bold")
+        ).pack(anchor="w", padx=20, pady=10)
 
-        columns = ("Mã NV", "Họ tên", "Số ngày công", "Lương chính thức")
+        columns = ("Mã NV", "Họ tên", "Số ngày công", "Lương chính thức", "Đánh giá")
         table = self.create_table(self.content, columns)
+        self.salary_table = table
 
         self.cursor.execute("""
-            SELECT e.id, e.name, s.working_days, s.official_salary
+            SELECT e.id, e.name, s.working_days, s.official_salary, s.rating
             FROM salaries s
             JOIN employees e ON s.emp_id = e.id
             ORDER BY e.id
         """)
 
+        for row in self.cursor.fetchall():
+            row = tuple("" if x is None else str(x) for x in row)
+            table.insert("", "end", values=row)
+
+        # ------------------------- CLICK CHUỘT LƯƠNG ----------------------
         def right_click(event):
-            sel = table.focus()
-            if not sel:
+            row_id = table.identify_row(event.y)
+            if not row_id:
                 return
 
-            values = table.item(sel, "values")
+            table.selection_set(row_id)
+            table.focus(row_id)
+
+            values = table.item(row_id, "values")
 
             menu = tk.Menu(self, tearoff=0)
-            menu.add_command(label="Sửa lương", 
-                command=lambda: self.edit_salary(values))
+            menu.add_command(
+                label="Sửa",
+                command=lambda: self.edit_salary(values)
+            )
             menu.post(event.x_root, event.y_root)
 
         table.bind("<Button-3>", right_click)
 
+    # ------------------------- SỬA LƯƠNG ----------------------
+    def edit_salary(self, values):
+        SalaryDialog(
+            self,
+            self.cursor,
+            self.conn,
+            lambda: self.show_salary_page(),
+            values
+        ).open()
 
-        for row in self.cursor.fetchall():
-            row = tuple(str(x) if x is not None else "" for x in row)
-            table.insert("", "end", values=row)
 
-    
-    # ========== DARK MODE ==========
+    # 📌 PHẦN 8 — DARK / LIGHT MODE
     def toggle_dark_mode(self, btn=None):
+
+        # ------------------------- ĐẢO TRẠNG THÁI DARK / LIGHT ----------------------
         self.dark_mode = not self.dark_mode
         mode = "dark" if self.dark_mode else "light"
 
-        # Update dark mode button text
         self.btn_dark_mode.configure(
             text="☀️ Light Mode" if self.dark_mode else "🌙    Dark Mode"
         )
 
-        # Update backgrounds
+        # ------------------------- ĐỔI MÀU NỀN CHUNG ----------------------
         self.configure(bg=self.colors[mode]["bg"])
         self.sidebar.configure(bg=self.colors[mode]["sidebar"])
         self.content.configure(bg=self.colors[mode]["content"])
 
-        # Sidebar label
         for w in self.sidebar.winfo_children():
             if isinstance(w, tk.Label):
                 w.configure(bg=self.colors[mode]["sidebar"], fg="white")
 
-        # Sidebar buttons
+        # ------------------------- CẬP NHẬT MÀU BUTTON TRONG SIDEBAR ----------------------
         for b in self.sidebar_buttons:
             b.configure(
                 bg=self.colors[mode]["sidebar_button"],
@@ -500,11 +538,10 @@ class HRDashboard(tk.Tk):
                 activeforeground="white"
             )
 
-        # Active button giữ màu active
         if self.active_button:
             self.active_button.configure(bg=self.colors[mode]["sidebar_active"])
 
-        # Recursive update content
+        # ------------------------- HÀM ĐỆ QUY ĐỔI MÀU TẤT CẢ WIDGET TRONG CONTENT ----------------------
         def recursive_update(widget):
             for w in widget.winfo_children():
                 if isinstance(w, tk.Frame):
@@ -536,7 +573,7 @@ class HRDashboard(tk.Tk):
 
         recursive_update(self.content)
 
-        # Treeview style
+        # ------------------------- ĐỔI STYLE TREEVIEW (ttk) ----------------------
         style = ttk.Style()
         style.theme_use("default")
 
@@ -558,7 +595,8 @@ class HRDashboard(tk.Tk):
                             foreground="black")
 
 
-    # ========== CLOSE ==========
+    # 📌 PHẦN 9 — ĐÓNG CHƯƠNG TRÌNH
+
     def on_close(self):
         if self.conn:
             self.conn.close()

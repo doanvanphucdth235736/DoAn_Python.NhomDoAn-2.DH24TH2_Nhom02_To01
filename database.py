@@ -1,8 +1,8 @@
 # database.py
-import pyodbc
-from tkinter import messagebox
 
 # =================== KẾT NỐI SQL SERVER ===================
+import pyodbc
+from tkinter import messagebox
 
 def connect_sql_server():
     try:
