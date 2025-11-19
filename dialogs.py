@@ -14,6 +14,16 @@ class EmployeeDialog:
         self.emp_data = emp_data
         self.original_id = emp_data[0] if emp_data else None
 
+    def center_window(self, win):
+        win.update_idletasks()
+        w = win.winfo_width()
+        h = win.winfo_height()
+        sw = win.winfo_screenwidth()
+        sh = win.winfo_screenheight()
+        x = (sw - w) // 2
+        y = (sh - h) // 2
+        win.geometry(f"{w}x{h}+{x}+{y}")
+
     # ----------------- MỞ DIALOG NHÂN VIÊN ----------------
     def open(self):
         self.win = tk.Toplevel(self.parent)
@@ -77,6 +87,8 @@ class EmployeeDialog:
             cursor="hand2",
             command=self.save
         ).grid(row=len(labels), columnspan=2, pady=15)
+
+        self.center_window(self.win)
         
 
     # ------------------ LƯU DỮ LIỆU NHÂN VIÊN ----------------
@@ -135,6 +147,8 @@ class EmployeeDialog:
 
         except Exception as e:
             messagebox.showerror("Lỗi", str(e))
+    
+    
 
 # =================== DIALOG PHÒNG BAN ===================
 class DepartmentDialog:
@@ -178,6 +192,16 @@ class DepartmentDialog:
             self.var_name.set(dept_data[1])
         else:
             self.original_id = None
+    
+    def center_window(self, win):
+        win.update_idletasks()
+        w = win.winfo_width()
+        h = win.winfo_height()
+        sw = win.winfo_screenwidth()
+        sh = win.winfo_screenheight()
+        x = (sw - w) // 2
+        y = (sh - h) // 2
+        win.geometry(f"{w}x{h}+{x}+{y}")
 
     # ------------------ LƯU DỮ LIỆU PHÒNG BAN ----------------
     def save(self):
@@ -227,6 +251,7 @@ class DepartmentDialog:
         except Exception as e:
             messagebox.showerror("Lỗi", str(e))
 
+
     # ----------------- MỞ DIALOG PHÒNG BAN ----------------
     def open(self):
         self.win.mainloop()
@@ -240,6 +265,16 @@ class SalaryDialog:
         self.conn = conn
         self.reload = reload
         self.data = data
+
+    def center_window(self, win):
+        win.update_idletasks()
+        w = win.winfo_width()
+        h = win.winfo_height()
+        sw = win.winfo_screenwidth()
+        sh = win.winfo_screenheight()
+        x = (sw - w) // 2
+        y = (sh - h) // 2
+        win.geometry(f"{w}x{h}+{x}+{y}")
 
     # ----------------- MỞ DIALOG LƯƠNG NHÂN VIÊN ----------------
     def open(self):
@@ -283,6 +318,8 @@ class SalaryDialog:
             height=1,
             command=self.save
         ).pack(pady=15)
+
+        self.center_window(self.win)
     
     # ------------------ LƯU DỮ LIỆU LƯƠNG NHÂN VIÊN ----------------
     def save(self):
@@ -302,5 +339,4 @@ class SalaryDialog:
         self.reload()
         self.win.destroy()
         messagebox.showinfo("Thành công", "Cập nhật lương thành công!")
-
 

@@ -15,6 +15,18 @@ class HRDashboard(tk.Tk):
         # 🖼️ CẤU HÌNH CỬA SỔ CHÍNH
         self.title("Hệ thống quản lý nhân sự")
         self.geometry("1150x620")
+        self.update_idletasks()
+
+        window_width = self.winfo_width()
+        window_height = self.winfo_height()
+
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+
+        x = (screen_width // 2) - (window_width // 2)
+        y = (screen_height // 2) - (window_height // 2)
+
+        self.geometry(f"{window_width}x{window_height}+{x}+{y}")
         self.configure(bg="#f1f5f9")
 
         # Lưu trạng thái nút sidebar & dark mode
@@ -160,6 +172,7 @@ class HRDashboard(tk.Tk):
 
         self.btn_dark_mode = create_bottom_btn("🌙    Dark Mode", self.toggle_dark_mode)
 
+
     # 📌 PHẦN 4 — HÀM CHUNG
 
     # -------------------------- XÓA CONTENT ---------------------------
@@ -256,6 +269,7 @@ class HRDashboard(tk.Tk):
         self.load_employees()
 
         self.emp_table.bind("<Button-3>", self.right_click_employee)
+        
 
     # --------------------------- TẢI DỮ LIỆU NHÂN VIÊN ------------------------
     def load_employees(self):
